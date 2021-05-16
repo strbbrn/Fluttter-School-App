@@ -12,7 +12,7 @@ class ResultView extends StatefulWidget {
 
 class _ResultViewState extends State<ResultView> {
  
-  String path = 'http://result.bpsplayschool.com/frame.php?path=';
+  String path = 'https://example.com/frame.php?path=';
   double progress = 0;
   @override
   void initState() {
