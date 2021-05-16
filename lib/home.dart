@@ -1,17 +1,13 @@
 import 'dart:convert';
-import 'package:school/notice.dart';
-
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter_webview_plugin/flutter_webview_plugin.dart';
-import 'package:school/noticev1.dart';
 import 'package:school/school/about.dart';
 import 'package:school/school/admission.dart';
 import 'package:school/school/contact.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/animation.dart';
 import 'package:url_launcher/url_launcher.dart';
-
 
 var green = Color(0xFF4caf6a);
 var greenLight = Color(0xFFd8ebde);
@@ -87,77 +83,82 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
   ScrollController scrollCtrl = new ScrollController();
-AnimationController animateCtrl;
-Choice _selectedChoice = choices[0]; 
+  AnimationController animateCtrl;
+  Choice _selectedChoice = choices[0];
   int _current = 0;
+//Demo notice
+//Local Json Data
+  String demoNotice =
+      '{"tags": [{"name": "School closed", "date": "16/05/2021"}, {"name": "Lockdown", "date": "25/03/2020"}, {"name": "Result Published", "date": "8/02/2020"}]}';
+
   List notices;
-  final  flutterWebviewPlugin = FlutterWebviewPlugin();
+  final flutterWebviewPlugin = FlutterWebviewPlugin();
   //Future Notice Start//
   @override
   void initState() {
-    double offset = 0.0;
-    super.initState();
     this.getNotice();
-     flutterWebviewPlugin.close();
-    flutterWebviewPlugin.onUrlChanged.listen((String url) {
-      
-      
-    });
+
+    double offset = 0.0;
     animateCtrl =
         new AnimationController(vsync: this, duration: Duration(seconds: 6))
           ..addListener(() {
-            if (animateCtrl.isCompleted) animateCtrl.repeat();
-            offset += 1.0;
-            if (offset - 1 > scrollCtrl.offset) {
-              offset = 0.0;
+            if (scrollCtrl.hasClients) {
+              if (animateCtrl.isCompleted) animateCtrl.repeat();
+              offset += 1.0;
+              if (offset - 1 > scrollCtrl.offset) {
+                offset = 0.0;
+              }
+              setState(() {
+                scrollCtrl.jumpTo(offset);
+              });
             }
-            setState(() {
-              scrollCtrl.jumpTo(offset);
-            });
           });
-animateCtrl.forward();
+    animateCtrl.forward();
+    super.initState();
+
+    flutterWebviewPlugin.close();
+    flutterWebviewPlugin.onUrlChanged.listen((String url) {});
   }
 
   Future getNotice() async {
-    var response = await http.get(
-        Uri.encodeFull(
-          'http://result.bpsplayschool.com/db.php',
-        ),
-        headers: {'accepts': 'application/json'});
-    var data = json.decode(response.body);
+    var data = json.decode(demoNotice);
     //print(data['result'][0]['date']);
 
-    print(data['result']);
     if (!mounted) return;
     setState(() {
-      notices = data['result'];
+      notices = data['tags'];
     });
+    //do your stuff here req and decode the response
   }
-@override
+
+  @override
   void dispose() {
-     animateCtrl.dispose();
+    animateCtrl.dispose();
     super.dispose();
     flutterWebviewPlugin.dispose();
   }
+
   //Future Notice End//
   void _select(Choice choice) {
     // Causes the app to rebuild with the new _selectedChoice.
     _launchURL();
   }
-  canLaunch(String url){
-    if(url.length>0)
-    return true;
+
+  canLaunch(String url) {
+    if (url.length > 0)
+      return true;
     else
-    return false;
+      return false;
   }
-_launchURL() async {
-  const url = 'http://bpsplayschool.com/privacy_policy.php';
-  if (await canLaunch(url)) {
-    await launch(url);
-  } else {
-    throw 'Could not launch $url';
+
+  _launchURL() async {
+    const url = 'https://example.com/privacy_policy.php';
+    if (await canLaunch(url)) {
+      await launch(url);
+    } else {
+      throw 'Could not launch $url';
+    }
   }
-}
 
   @override
   Widget build(BuildContext context) {
@@ -167,23 +168,20 @@ _launchURL() async {
         leading: Image.asset('assets/bps.png'),
         title: Text('BPS Play School'),
         actions: <Widget>[
-          
-            // action button
-            
-            // overflow menu
-            PopupMenuButton<Choice>(
-              onSelected: _select,
-              itemBuilder: (BuildContext context) {
-                return choices.map((Choice choice) {
-                  return PopupMenuItem<Choice>(
-                    value: choice,
-                    child: Text(choice.title),
-                  );
-                }).toList();
-              },
-            ),
-         
-       
+          // action button
+
+          // overflow menu
+          PopupMenuButton<Choice>(
+            onSelected: _select,
+            itemBuilder: (BuildContext context) {
+              return choices.map((Choice choice) {
+                return PopupMenuItem<Choice>(
+                  value: choice,
+                  child: Text(choice.title),
+                );
+              }).toList();
+            },
+          ),
         ],
         elevation: 2.0,
         backgroundColor: Color.fromARGB(255, 255, 0, 0),
@@ -194,13 +192,15 @@ _launchURL() async {
           Stack(children: [
             CarouselSlider(
               items: child,
-              autoPlay: true,
-              aspectRatio: 2.0,
-              onPageChanged: (index) {
-                setState(() {
-                  _current = index;
-                });
-              },
+              options: CarouselOptions(
+                aspectRatio: 2.0,
+                autoPlay: true,
+                onPageChanged: (index, reason) {
+                  setState(() {
+                    _current = index;
+                  });
+                },
+              ),
             ),
             Positioned(
                 top: 150.0,
@@ -364,42 +364,20 @@ _launchURL() async {
             child: notices == null
                 ? Center(child: Text('0 Notice Available'))
                 : ListView.builder(
-                  controller: scrollCtrl,
-                    shrinkWrap: true,
-                    physics: ScrollPhysics(),
                     itemCount: notices == null ? 0 : notices.length,
+                    //itemCount: 3,
                     itemBuilder: (BuildContext context, int index) {
                       return Card(
                         clipBehavior: Clip.hardEdge,
                         child: ListTile(
-                            leading: Icon(Icons.av_timer),
-                            title: Text(
-                              notices[index]['notices'],
-                              style: TextStyle(fontStyle: FontStyle.italic),
-                            ),
-                            subtitle:
-                                Text('Posted On: ' + notices[index]['date']),
-                            onTap: () {
-                              if (notices[index]['isfile'] == '1') {
-                                var type=notices[index]['path'].split('.');
-                                if(type[type.length-1]=='pdf'){
-                                Navigator.push(context, MaterialPageRoute(
-                                  builder: (context) => Notice(notices[index]['path'])
-                                ));
-                                }else{
-                                  Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => NotIm(notices[index]['path']) ));
-                                }
-                             
-                              } 
-                              else {
-                                Scaffold.of(context).showSnackBar(SnackBar(
-                                  content: Text('No File is Uploaded'),
-                                ));
-                              }
-                            }),
+                          leading: Icon(Icons.av_timer),
+                          title: Text(
+                            notices[index]['name'],
+                            style: TextStyle(fontStyle: FontStyle.italic),
+                          ),
+                          subtitle:
+                              Text('Posted On: ' + notices[index]['date']),
+                        ),
                       );
                     },
                   ),
@@ -409,6 +387,7 @@ _launchURL() async {
     );
   }
 }
+
 class Choice {
   const Choice({this.title, this.icon});
 
@@ -418,5 +397,4 @@ class Choice {
 
 const List<Choice> choices = const <Choice>[
   const Choice(title: 'Privacy Policy', icon: Icons.security),
-  
 ];
