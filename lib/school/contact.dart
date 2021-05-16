@@ -10,7 +10,7 @@ class Contact extends StatelessWidget {
         title: Text('Contact'),
         elevation: 2.0,
       ),
-      url: 'http://bpsplayschool.com/contact.php',
+      url: 'https://example.com/contact.php',
       withJavascript: true,
 
       
