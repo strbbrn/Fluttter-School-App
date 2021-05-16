@@ -131,7 +131,7 @@ class _AdmissionState extends State<Admission> {
                                     title: Text("BPS PLAY SCHOOL"),
                                   ),
                                   url:
-                                      'http://bpsplayschool.com/applicationform.php',
+                                      'https://example.com/applicationform.php',
                                   scrollBar: true,
                                   withZoom: true,
                                   withLocalStorage: true,
